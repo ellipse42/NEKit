@@ -83,7 +83,7 @@ open class HTTPProxySocket: ProxySocket {
         socket.readDataTo(data: Utils.HTTPData.DoubleCRLF)
     }
     
-    override public func execHeader() {
+    open func execHeader() {
         // check it
     }
     
