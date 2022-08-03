@@ -1,6 +1,6 @@
 import Foundation
 
-public class HTTPProxySocket: ProxySocket {
+open class HTTPProxySocket: ProxySocket {
     enum HTTPProxyReadStatus: CustomStringConvertible {
         case invalid,
         readingFirstHeader,
@@ -52,7 +52,7 @@ public class HTTPProxySocket: ProxySocket {
     /// The remote port to connect to.
     public var destinationPort: Int!
     
-    private var currentHeader: HTTPHeader!
+    public var currentHeader: HTTPHeader!
     
     private let scanner: HTTPStreamScanner = HTTPStreamScanner()
     
@@ -81,6 +81,10 @@ public class HTTPProxySocket: ProxySocket {
         
         readStatus = .readingFirstHeader
         socket.readDataTo(data: Utils.HTTPData.DoubleCRLF)
+    }
+    
+    override public func execHeader() {
+        // check it
     }
     
     override public func readData() {
@@ -151,12 +155,16 @@ public class HTTPProxySocket: ProxySocket {
             session = ConnectSession(host: destinationHost!, port: destinationPort!)
             observer?.signal(.receivedRequest(session!, on: self))
             delegate?.didReceive(session: session!, from: self)
+            
+            execHeader()
         case (.readingHeader, .header(let header)):
             currentHeader = header
             currentHeader.removeProxyHeader()
             currentHeader.rewriteToRelativePath()
             
             delegate?.didRead(data: currentHeader.toData(), from: self)
+            
+            execHeader()
         case (.readingContent, .content(let content)):
             delegate?.didRead(data: content, from: self)
         default:
